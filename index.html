@@ -1,0 +1,288 @@
+<html>
+  <head>
+    <style>
+      canvas{ position: relative; cursor: none;}
+      #span0{ display: none; }
+      body{ margin: 0; overflow: hidden; }
+    </style>
+    <script>
+      window.addEventListener("load", Init);
+      let focusx = 50, focusy = 50; // out of 100, ie a percent
+      let offsetx = 0, offsety = 0;
+      let pencolor = "#000";
+      let penwidth = 2;
+      let drawing = [ {lineWidth: 3, strokeStyle: 'red'}, 30, 30, 50, 50, 40, 100, 100, 40, "test", 80, 80];
+      let panspeed = 100.0;
+      let scrollmargin = 65;
+      let grabsize = 36; // in px
+      let cursorsize = 5;
+      let precision = 4.0;
+      let focusborder = Math.min(100/8,100*(1 - 1/precision)/2);
+      let mousedownpos = null;
+      let mousedrag = false;
+      let ballpos = null;
+      let ballsize = 45;
+      let x = 50, y=50;
+      let delay = 100;
+      let pointIndex = 0;
+
+      const DRAW='draw', TEXT='text', LINE='line';
+
+      function Status(x){
+        span0.innerHTML = "" + x;
+      }
+      function Init(){
+        Status("Init");
+        document
+        canvas0.width = window.innerWidth-2;
+        canvas0.height = window.innerHeight-2;
+        x = canvas0.width/2;
+        y = canvas0.height/2;
+        Draw();
+        setInterval(Animate, delay);
+        canvas0.addEventListener("mousemove", MouseMove);
+        canvas0.addEventListener("mousedown", MouseDown);
+        canvas0.addEventListener("mouseup", MouseUp);
+        canvas0.addEventListener("mouseout", ()=>{ ballpos = null; mousedownpos = null; });
+      }
+      function GetZoomWindow(){
+        let w = canvas0.width;
+        let h = canvas0.height;
+        let x0 = w*focusx/100 - w/precision/2;
+        let y0 = h*focusy/100 - h/precision/2;
+        let x1 = x0 + w/precision;
+        let y1 = y0 + h/precision;
+        return [x0, y0, x1, y1];
+      }
+      function DrawLast(){
+      }
+      function Draw(){
+        let ctx = canvas0.getContext("2d");
+        let w = canvas0.width;
+        let h = canvas0.height;
+        let wind = GetZoomWindow();
+        let [x0, y0, x1, y1] = wind;
+        let margin = scrollmargin/precision;
+        let [x2, y2, x3, y3] = [x0 + margin, y0 + margin, x1 - margin, y1 - margin];
+        let drawgrabber = false; //ballpos != null && Math.pow(ballpos[0] - x0, 2) + Math.pow(ballpos[1] - y0, 2) < Math.pow(grabsize+ cursorsize, 2);
+
+        ctx.fillStyle = "rgba(230,230,230,0.9)";
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.fillRect(0,0,w,h);
+        ctx.fillStyle = "#000";
+        ctx.fillRect(x-offsetx-4, y-offsety-4, 8, 8);
+        ctx.fillStyle = "#f00";
+        ctx.fillRect(x-offsetx-2, y-offsety-2, 4, 4);
+        //ctx.fillRect(30,30,80,80);
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "left";
+        ctx.font = "20px sans-serif";
+
+ 
+        let lastpoint = false;
+        ctx.save();
+        ctx.strokeStyle = pencolor;
+        ctx.lineWidth = penwidth;
+        ctx.beginPath();
+        let stroketype = DRAW;
+        for(let i=0; i<Math.min(drawing.length, pointIndex) - 1; i+=2){
+          if(typeof drawing[i] == "object"){
+            let info = drawing[i];
+            stroketype = info.type;
+            if(info == null){
+              lastpoint = false;
+              --i;
+              continue;
+            } else if(info.type == TEXT) {
+              copyProps(ctx, info, ['fillStyle', 'textBaseline', 'textAlign', 'strokeStyle']);
+              --i;
+              continue;
+            } else if(info.type == DRAW){
+              copyProps(ctx, info, ['lineWidth', 'strokeStyle']);
+              --i;
+              continue;
+            }
+          }
+          if(stroketype == DRAW){
+            let x = drawing[i], y = drawing[i+1];
+            if(lastpoint){
+              ctx.lineTo(x - offsetx, y - offsety);
+            } else {
+              ctx.moveTo(x - offsetx, y - offsety);
+            }
+            lastpoint = true;
+          } else if(stroketype == TEXT){
+            ctx.fillText(x - offsetx, y - offsety);
+          }
+        }
+        ctx.stroke();
+        
+        ctx.restore();
+        ctx.save();
+        ctx.beginPath();
+
+        for(let i=0; i<0; ++i){
+          if(i == 0){
+            ctx.setLineDash([]);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "rgba(255,255,255,0.6)";
+          }
+          if(i == 1){
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4,6]);
+            ctx.strokeStyle = "rgba(0,0,0,1.0)";
+          }
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y0);
+          ctx.lineTo(x1, y1);
+          ctx.lineTo(x0, y1);
+          ctx.lineTo(x0, y0);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(0,0,0,0.13)";
+          //ctx.fillRect(x0-grabsize/4, y0-grabsize/4, grabsize/2, grabsize/2);
+        } 
+        ctx.fillStyle = "rgba(0,0,0,0.13)";
+        ctx.beginPath();
+        ctx.moveTo(x0,y0);
+        ctx.lineTo(x2,y2);
+        ctx.lineTo(x3,y2);
+        ctx.lineTo(x3,y3);
+        ctx.lineTo(x2,y3);
+        ctx.lineTo(x2,y2);
+        ctx.lineTo(x0,y0);
+        ctx.lineTo(x0, y1);
+        ctx.lineTo(x1, y1);
+        ctx.lineTo(x1, y0);
+        ctx.lineTo(x0, y0);
+        ctx.closePath();
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        if(drawgrabber){
+          ctx.beginPath();
+          ctx.strokeStyle = "rgba(0,0,0,0.2)";
+          ctx.fillStyle = "rgba(255,255,255,0.2)";
+          ctx.arc(x0, y0, grabsize/2, 0, 2*Math.PI);
+          ctx.fill();
+          ctx.stroke();
+        } else if(ballpos){
+          ctx.beginPath();
+          ctx.strokeStyle = "rgba(0,0,0,0.4)";
+          ctx.fillStyle = "rgba(255,255,255,0.4)";
+          ctx.arc(ballpos[0], ballpos[1], ballsize/2, 0, 2*Math.PI);
+          ctx.fill();
+          ctx.stroke();
+          let [x0, y0, x1, y1] = GetZoomWindow();
+          let a = (x0 + x1)/2 + (ballpos[0] - w/2)/precision;
+          let b = (y0 + y1)/2 + (ballpos[1] - h/2)/precision;
+          ctx.beginPath();
+          ctx.fillStyle = "rgba(255,255,255, 0.3)";
+          ctx.arc(a, b, cursorsize*2, 0, 2*Math.PI);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.strokeStyle = "rgba(0,0,0,0.5)";
+          
+          ctx.moveTo(a-cursorsize, b);
+          ctx.lineTo(a+cursorsize, b);
+          ctx.moveTo(a, b-cursorsize);
+          ctx.lineTo(a, b+cursorsize);
+          ctx.stroke();
+        }
+      }
+      function MouseDown(e){
+        mousedownpos = [e.offsetX, e.offsetY];
+        mousedrag = false;
+      }
+      function MouseUp(e){
+        if(drawing.length > 0 && drawing[drawing.length - 1] != null){
+          drawing.push(null);
+          ++pointIndex;
+        }
+        if(!mousedrag){
+           let x0 = canvas0.width/2;
+           let y0 = canvas0.height/2;
+           let dx = (x0 - e.offsetX)/precision;
+           let dy = (y0 - e.offsetY)/precision;
+           offsetx -= dx;
+           offsety -= dy;
+        }
+        
+        mousedownpos = null;
+        mousedrag = false;
+        pendown = false;
+      }
+      function MouseMove(e){
+        let x = e.offsetX, y = e.offsetY;
+        let w = canvas0.width, h = canvas0.height;
+        ballpos = [x, y];
+        let [x0, y0] = GetZoomWindow();
+        let targetx = x0 + x/precision;
+        let targety = y0 + y/precision;
+        if(mousedownpos){
+          drawing.push(targetx + offsetx, targety + offsety);
+          pointIndex += 2;
+          mousedrag = true;
+        }
+      }
+      function Animate(){
+        if(ballpos){
+          let w = canvas0.width, h = canvas0.height;
+          let [x, y] = ballpos;
+          let margin = scrollmargin;
+          let [x0, y0, x1, y1] = [margin, margin, w-margin, h-margin];
+
+          let winx = focusx * w / 100;
+          let winy = focusy * h / 100;
+          let borderx = (focusborder + 50/precision) * w / 100;
+          let bordery = (focusborder + 50/precision) * h / 100;
+          if(x < x0){
+            winx += panspeed * (x - x0) * delay / 1000/ x0;
+            if(winx < borderx){
+              offsetx += winx - borderx;
+              winx = borderx;
+            }
+          }
+          if(y < y0){
+            winy += panspeed * (y - y0) * delay / 1000/ y0;
+            if(winy < bordery){
+              offsety += winy - bordery;
+              winy = bordery;
+            }
+          }
+          if(x > x1){
+            winx += panspeed * (x - x1) * delay / 1000/ x0;
+            if(winx > w - borderx){
+              offsetx += winx - w + borderx;
+              winx = w - borderx;
+            }
+          }
+          if(y > y1){
+            winy += panspeed * (y - y1) * delay / 1000 / y0;
+            if(winy > h - bordery){
+              offsety += winy - h + bordery;
+              winy = h - bordery;
+            }
+          }
+          focusx = 100 * winx / w;
+          focusy = 100 * winy / h;
+          //let winx = focusx * w / 100;
+          //let winy = focusy * h / 100;
+        }
+        Draw();
+      }
+
+      function copyProps(obj, from, props){
+        for(let i=0; i<props.length; ++i){
+          let k = props[i];
+          if(k in from) obj[k] = from[k];
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <span id="span0"></span>
+    <canvas id="canvas0"></canvas>
+  </body>
+</html>
