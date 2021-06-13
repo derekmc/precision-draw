@@ -11,7 +11,7 @@
       let offsetx = 0, offsety = 0;
       let pencolor = "#000";
       let penwidth = 2;
-      let drawing = [ {lineWidth: 3, strokeStyle: 'red'}, 30, 30, 50, 50, 40, 100, 100, 40, "test", 80, 80];
+      let drawing = [30, 30, 50, 50, 40, 100, 100, 40, null]; // "test", 80, 80];
       let panspeed = 100.0;
       let scrollmargin = 65;
       let grabsize = 36; // in px
@@ -64,7 +64,6 @@
         let [x0, y0, x1, y1] = wind;
         let margin = scrollmargin/precision;
         let [x2, y2, x3, y3] = [x0 + margin, y0 + margin, x1 - margin, y1 - margin];
-        let drawgrabber = false; //ballpos != null && Math.pow(ballpos[0] - x0, 2) + Math.pow(ballpos[1] - y0, 2) < Math.pow(grabsize+ cursorsize, 2);
 
         ctx.fillStyle = "rgba(230,230,230,0.9)";
         ctx.lineCap = "round";
@@ -89,7 +88,7 @@
         for(let i=0; i<Math.min(drawing.length, pointIndex) - 1; i+=2){
           if(typeof drawing[i] == "object"){
             let info = drawing[i];
-            stroketype = info.type;
+            if(info != null){ stroketype = info.type; }
             if(info == null){
               lastpoint = false;
               --i;
@@ -160,14 +159,7 @@
         ctx.closePath();
         ctx.fill();
         ctx.restore();
-        if(drawgrabber){
-          ctx.beginPath();
-          ctx.strokeStyle = "rgba(0,0,0,0.2)";
-          ctx.fillStyle = "rgba(255,255,255,0.2)";
-          ctx.arc(x0, y0, grabsize/2, 0, 2*Math.PI);
-          ctx.fill();
-          ctx.stroke();
-        } else if(ballpos){
+        if(ballpos){
           ctx.beginPath();
           ctx.strokeStyle = "rgba(0,0,0,0.4)";
           ctx.fillStyle = "rgba(255,255,255,0.4)";
