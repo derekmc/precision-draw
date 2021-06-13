@@ -2,6 +2,7 @@
   <head>
     <style>
       canvas{ position: relative; cursor: none;}
+      #canvas1{ display: none; }
       #span0{ display: none; }
       body{ margin: 0; overflow: hidden; }
     </style>
@@ -11,7 +12,7 @@
       let offsetx = 0, offsety = 0;
       let pencolor = "#000";
       let penwidth = 2;
-      let drawing = [30, 30, 50, 50, 40, 100, 100, 40, null]; // "test", 80, 80];
+      let drawing = [30, 30, 50, 50, 40, 100, 100, 40, "test", 80, 80, null];
       let panspeed = 100.0;
       let scrollmargin = 65;
       let grabsize = 36; // in px
@@ -24,7 +25,8 @@
       let ballsize = 45;
       let x = 50, y=50;
       let delay = 100;
-      let pointIndex = 0;
+      let drawingIndex = drawing.length;
+      let drawlastonly = true;
 
       const DRAW='draw', TEXT='text', LINE='line';
 
@@ -33,17 +35,22 @@
       }
       function Init(){
         Status("Init");
-        document
-        canvas0.width = window.innerWidth-2;
-        canvas0.height = window.innerHeight-2;
+        Resize();
         x = canvas0.width/2;
         y = canvas0.height/2;
-        Draw();
         setInterval(Animate, delay);
         canvas0.addEventListener("mousemove", MouseMove);
         canvas0.addEventListener("mousedown", MouseDown);
         canvas0.addEventListener("mouseup", MouseUp);
         canvas0.addEventListener("mouseout", ()=>{ ballpos = null; mousedownpos = null; });
+        window.addEventListener("resize", Resize);
+      }
+      function Resize(){
+        canvas0.width = window.innerWidth-2;
+        canvas0.height = window.innerHeight-2;
+        canvas1.width = window.innerWidth-2;
+        canvas1.height = window.innerHeight-2;
+        Draw();
       }
       function GetZoomWindow(){
         let w = canvas0.width;
@@ -56,8 +63,9 @@
       }
       function DrawLast(){
       }
-      function Draw(){
+      function Draw(lastonly){
         let ctx = canvas0.getContext("2d");
+        let ctx2 = canvas1.getContext("2d");
         let w = canvas0.width;
         let h = canvas0.height;
         let wind = GetZoomWindow();
@@ -66,82 +74,79 @@
         let [x2, y2, x3, y3] = [x0 + margin, y0 + margin, x1 - margin, y1 - margin];
 
         ctx.fillStyle = "rgba(230,230,230,0.9)";
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
         ctx.fillRect(0,0,w,h);
         ctx.fillStyle = "#000";
         ctx.fillRect(x-offsetx-4, y-offsety-4, 8, 8);
         ctx.fillStyle = "#f00";
         ctx.fillRect(x-offsetx-2, y-offsety-2, 4, 4);
         //ctx.fillRect(30,30,80,80);
-        ctx.textBaseline = "middle";
-        ctx.textAlign = "left";
-        ctx.font = "20px sans-serif";
 
+        // default styles
+        ctx2.lineCap = "round";
+        ctx2.lineJoin = "round";
+        ctx2.textBaseline = "middle";
+        ctx2.textAlign = "left";
+        ctx2.font = "20px sans-serif";
  
         let lastpoint = false;
-        ctx.save();
-        ctx.strokeStyle = pencolor;
-        ctx.lineWidth = penwidth;
-        ctx.beginPath();
+        if(!lastonly) ctx2.clearRect(0,0,w,h);
+        ctx2.save();
+        ctx2.strokeStyle = pencolor;
+        ctx2.lineWidth = penwidth;
+        ctx2.beginPath();
         let stroketype = DRAW;
-        for(let i=0; i<Math.min(drawing.length, pointIndex) - 1; i+=2){
+        let text = "";
+        let i=0;
+        if(lastonly){
+          i = Math.min(drawing.length, drawingIndex) - 1;
+          do{ --i; } while(i > 0 && typeof drawing[i] == "number");
+        }
+        for( ; i<Math.min(drawing.length, drawingIndex) - 1; i+=2){
           if(typeof drawing[i] == "object"){
             let info = drawing[i];
             if(info != null){ stroketype = info.type; }
             if(info == null){
+              stroketype = DRAW;
               lastpoint = false;
               --i;
               continue;
             } else if(info.type == TEXT) {
-              copyProps(ctx, info, ['fillStyle', 'textBaseline', 'textAlign', 'strokeStyle']);
+              copyProps(ctx2, info, ['fillStyle', 'textBaseline', 'textAlign', 'strokeStyle']);
+              text = info.text;
               --i;
               continue;
             } else if(info.type == DRAW){
-              copyProps(ctx, info, ['lineWidth', 'strokeStyle']);
+              copyProps(ctx2, info, ['lineWidth', 'strokeStyle']);
               --i;
               continue;
             }
+          } else if(typeof drawing[i] == "string"){
+            stroketype = TEXT;
+            text = drawing[i];
+            lastpoint = false;
+            --i;
+            continue;
+            // console.log("text", text);
           }
+          let x = drawing[i], y = drawing[i+1];
           if(stroketype == DRAW){
-            let x = drawing[i], y = drawing[i+1];
             if(lastpoint){
-              ctx.lineTo(x - offsetx, y - offsety);
+              ctx2.lineTo(x - offsetx, y - offsety);
             } else {
-              ctx.moveTo(x - offsetx, y - offsety);
+              ctx2.moveTo(x - offsetx, y - offsety);
             }
             lastpoint = true;
           } else if(stroketype == TEXT){
-            ctx.fillText(x - offsetx, y - offsety);
+            ctx2.fillText(text, x - offsetx, y - offsety);
           }
         }
-        ctx.stroke();
+        ctx2.stroke();
+        ctx.drawImage(canvas1, 0, 0, w, h);
         
         ctx.restore();
         ctx.save();
-        ctx.beginPath();
 
-        for(let i=0; i<0; ++i){
-          if(i == 0){
-            ctx.setLineDash([]);
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = "rgba(255,255,255,0.6)";
-          }
-          if(i == 1){
-            ctx.lineWidth = 2;
-            ctx.setLineDash([4,6]);
-            ctx.strokeStyle = "rgba(0,0,0,1.0)";
-          }
-          ctx.beginPath();
-          ctx.moveTo(x0, y0);
-          ctx.lineTo(x1, y0);
-          ctx.lineTo(x1, y1);
-          ctx.lineTo(x0, y1);
-          ctx.lineTo(x0, y0);
-          ctx.stroke();
-          ctx.fillStyle = "rgba(0,0,0,0.13)";
-          //ctx.fillRect(x0-grabsize/4, y0-grabsize/4, grabsize/2, grabsize/2);
-        } 
+        // draw precision window
         ctx.fillStyle = "rgba(0,0,0,0.13)";
         ctx.beginPath();
         ctx.moveTo(x0,y0);
@@ -159,6 +164,7 @@
         ctx.closePath();
         ctx.fill();
         ctx.restore();
+
         if(ballpos){
           ctx.beginPath();
           ctx.strokeStyle = "rgba(0,0,0,0.4)";
@@ -190,7 +196,7 @@
       function MouseUp(e){
         if(drawing.length > 0 && drawing[drawing.length - 1] != null){
           drawing.push(null);
-          ++pointIndex;
+          ++drawingIndex;
         }
         if(!mousedrag){
            let x0 = canvas0.width/2;
@@ -199,6 +205,7 @@
            let dy = (y0 - e.offsetY)/precision;
            offsetx -= dx;
            offsety -= dy;
+           drawlastonly = false;
         }
         
         mousedownpos = null;
@@ -214,7 +221,7 @@
         let targety = y0 + y/precision;
         if(mousedownpos){
           drawing.push(targetx + offsetx, targety + offsety);
-          pointIndex += 2;
+          drawingIndex += 2;
           mousedrag = true;
         }
       }
@@ -262,7 +269,8 @@
           //let winx = focusx * w / 100;
           //let winy = focusy * h / 100;
         }
-        Draw();
+        Draw(drawlastonly);
+        drawlastonly = true;
       }
 
       function copyProps(obj, from, props){
@@ -276,5 +284,6 @@
   <body>
     <span id="span0"></span>
     <canvas id="canvas0"></canvas>
+    <canvas id="canvas1"></canvas>
   </body>
 </html>
