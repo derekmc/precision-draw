@@ -22,7 +22,10 @@
       let precision = 4.0;
       let focusborder = Math.min(100/8,100*(1 - 1/precision)/2);
       let mousedownpos = null;
+      let mousedowntime = 0;
       let mousedrag = false;
+      let dragradius = 5;
+      let dragdelay = 200; //
       let ballpos = null;
       let ballsize = 45;
       let x = 50, y=50;
@@ -188,7 +191,7 @@
         ctx.textAlign = "center";
         ctx.font = Math.floor(1.5*helpRadius) + "px sans-serif";
         ctx.fillStyle = backgroundColor;
-        ctx.fillText("?", x - offsetx, y - offsety + 0.16 * helpRadius);
+        ctx.fillText("=", x - offsetx, y - offsety - 0.03 * helpRadius);
 
         if(ballpos){
           ctx.beginPath();
@@ -218,14 +221,19 @@
       }
       function MouseDown(e){
         mousedownpos = [e.offsetX, e.offsetY];
+        mousedowntime = Date.now();
         mousedrag = false;
       }
       function MouseUp(e){
+        let x = e.offsetX, y = e.offsetY;
         if(drawing.length > 0 && drawing[drawing.length - 1] != null){
           drawing.push(null);
           ++drawingIndex;
         }
-        if(!mousedrag){
+
+        if(!mousedrag && Date.now() - mousedowntime < dragdelay &&
+           Math.sqrt(Math.pow(x-mousedownpos[0], 2) + Math.pow(y-mousedownpos[1], 2)) < dragradius){
+
            let x0 = canvas0.width/2;
            let y0 = canvas0.height/2;
            let dx = (x0 - e.offsetX)/precision;
