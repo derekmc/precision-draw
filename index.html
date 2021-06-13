@@ -8,9 +8,11 @@
     </style>
     <script>
       window.addEventListener("load", Init);
+      let backgroundColor = "#fffcaa", frameColor = "rgba(112,66,20, 0.15)",
+          drawColor = "rgb(84,51,18)", highlightColor = "rgb(201,117,34)";
+      let helpRadius = 15
       let focusx = 50, focusy = 50; // out of 100, ie a percent
       let offsetx = 0, offsety = 0;
-      let pencolor = "#000";
       let penwidth = 2;
       let drawing = [30, 30, 50, 50, 40, 100, 100, 40, "test", 80, 80, null];
       let panspeed = 100.0;
@@ -73,12 +75,12 @@
         let margin = scrollmargin/precision;
         let [x2, y2, x3, y3] = [x0 + margin, y0 + margin, x1 - margin, y1 - margin];
 
-        ctx.fillStyle = "rgba(230,230,230,0.9)";
+        ctx.fillStyle = backgroundColor;
         ctx.fillRect(0,0,w,h);
-        ctx.fillStyle = "#000";
-        ctx.fillRect(x-offsetx-4, y-offsety-4, 8, 8);
-        ctx.fillStyle = "#f00";
-        ctx.fillRect(x-offsetx-2, y-offsety-2, 4, 4);
+        
+        //ctx.fillRect(x-offsetx-4, y-offsety-4, 8, 8);
+        //ctx.fillStyle = "#f00";
+        //ctx.fillRect(x-offsetx-2, y-offsety-2, 4, 4);
         //ctx.fillRect(30,30,80,80);
 
         // default styles
@@ -91,7 +93,8 @@
         let lastpoint = false;
         if(!lastonly) ctx2.clearRect(0,0,w,h);
         ctx2.save();
-        ctx2.strokeStyle = pencolor;
+        ctx2.strokeStyle = drawColor;
+        ctx2.fillStyle = drawColor;
         ctx2.lineWidth = penwidth;
         ctx2.beginPath();
         let stroketype = DRAW;
@@ -147,7 +150,7 @@
         ctx.save();
 
         // draw precision window
-        ctx.fillStyle = "rgba(0,0,0,0.13)";
+        ctx.fillStyle = frameColor;
         ctx.beginPath();
         ctx.moveTo(x0,y0);
         ctx.lineTo(x2,y2);
@@ -161,9 +164,31 @@
         ctx.lineTo(x1, y0);
         ctx.lineTo(x0, y0);
         ctx.closePath();
-        ctx.closePath();
         ctx.fill();
         ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(x - offsetx, y - offsety, helpRadius, 0, 2 * Math.PI);
+
+        let helpHover = false;
+        if(ballpos){
+          let a = (x0 + x1 - w)/2 + (ballpos[0] - w/2)/precision;
+          let b = (y0 + y1 - h)/2 + (ballpos[1] - h/2)/precision;
+          let dist = Math.sqrt(Math.pow(a + offsetx, 2.0) + Math.pow(b + offsety, 2.0));
+          helpHover = dist < helpRadius;
+          //console.log(a + offsetx, b + offsety, dist);
+          ctx.fillStyle = helpHover? highlightColor : drawColor;
+        }
+        else {
+          ctx.fillStyle = drawColor;
+        }
+        ctx.fill();
+
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.font = Math.floor(1.5*helpRadius) + "px sans-serif";
+        ctx.fillStyle = backgroundColor;
+        ctx.fillText("?", x - offsetx, y - offsety + 0.16 * helpRadius);
 
         if(ballpos){
           ctx.beginPath();
@@ -175,18 +200,20 @@
           let [x0, y0, x1, y1] = GetZoomWindow();
           let a = (x0 + x1)/2 + (ballpos[0] - w/2)/precision;
           let b = (y0 + y1)/2 + (ballpos[1] - h/2)/precision;
-          ctx.beginPath();
-          ctx.fillStyle = "rgba(255,255,255, 0.3)";
-          ctx.arc(a, b, cursorsize*2, 0, 2*Math.PI);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.strokeStyle = "rgba(0,0,0,0.5)";
-          
-          ctx.moveTo(a-cursorsize, b);
-          ctx.lineTo(a+cursorsize, b);
-          ctx.moveTo(a, b-cursorsize);
-          ctx.lineTo(a, b+cursorsize);
-          ctx.stroke();
+          if(!helpHover){
+            ctx.beginPath();
+            ctx.fillStyle = "rgba(255,255,255, 0.3)";
+            ctx.arc(a, b, cursorsize*2, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.strokeStyle = "rgba(0,0,0,0.5)";
+            
+            ctx.moveTo(a-cursorsize, b);
+            ctx.lineTo(a+cursorsize, b);
+            ctx.moveTo(a, b-cursorsize);
+            ctx.lineTo(a, b+cursorsize);
+            ctx.stroke();
+          }
         }
       }
       function MouseDown(e){
