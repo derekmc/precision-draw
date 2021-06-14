@@ -10,13 +10,15 @@
       window.addEventListener("load", Init);
       let backgroundColor = "#fffcaa", frameColor = "rgba(112,66,20, 0.15)",
           drawColor = "rgb(84,51,18)", highlightColor = "rgb(201,117,34)";
-      let helpRadius = 15
+      let buttonSize = 50;
+      let buttonMargin = 5;
+      let buttons = ["=", "<", ">"];
       let focusx = 50, focusy = 50; // out of 100, ie a percent
       let offsetx = 0, offsety = 0;
       let penwidth = 2;
       let drawing = [30, 30, 50, 50, 40, 100, 100, 40, "test", 80, 80, null];
       let panspeed = 100.0;
-      let scrollmargin = 65;
+      let scrollMargin = 65;
       let grabsize = 36; // in px
       let cursorsize = 5;
       let precision = 4.0;
@@ -40,7 +42,6 @@
       }
       function Init(){
         Status("Init");
-        Resize();
         x = canvas0.width/2;
         y = canvas0.height/2;
         setInterval(Animate, delay);
@@ -49,6 +50,7 @@
         canvas0.addEventListener("mouseup", MouseUp);
         canvas0.addEventListener("mouseout", ()=>{ ballpos = null; mousedownpos = null; });
         window.addEventListener("resize", Resize);
+        Resize();
       }
       function Resize(){
         canvas0.width = window.innerWidth-2;
@@ -68,6 +70,9 @@
       }
       function DrawLast(){
       }
+      function ButtonClick(button){
+      }
+
       function Draw(lastonly){
         let ctx = canvas0.getContext("2d");
         let ctx2 = canvas1.getContext("2d");
@@ -75,7 +80,7 @@
         let h = canvas0.height;
         let wind = GetZoomWindow();
         let [x0, y0, x1, y1] = wind;
-        let margin = scrollmargin/precision;
+        let margin = scrollMargin/precision;
         let [x2, y2, x3, y3] = [x0 + margin, y0 + margin, x1 - margin, y1 - margin];
 
         ctx.fillStyle = backgroundColor;
@@ -170,28 +175,64 @@
         ctx.fill();
         ctx.restore();
 
+        ctx.fillStyle = drawColor;
         ctx.beginPath();
-        ctx.arc(x - offsetx, y - offsety, helpRadius, 0, 2 * Math.PI);
-
-        let helpHover = false;
-        if(ballpos){
-          let a = (x0 + x1 - w)/2 + (ballpos[0] - w/2)/precision;
-          let b = (y0 + y1 - h)/2 + (ballpos[1] - h/2)/precision;
-          let dist = Math.sqrt(Math.pow(a + offsetx, 2.0) + Math.pow(b + offsety, 2.0));
-          helpHover = dist < helpRadius;
-          //console.log(a + offsetx, b + offsety, dist);
-          ctx.fillStyle = helpHover? highlightColor : drawColor;
-        }
-        else {
-          ctx.fillStyle = drawColor;
-        }
+        ctx.moveTo(0,0);
+        let m = scrollMargin
+        ctx.lineTo(m,m);
+        ctx.lineTo(w-m,m);
+        ctx.lineTo(w-m,h-m);
+        ctx.lineTo(m,h-m);
+        ctx.lineTo(m, m);
+        ctx.lineTo(0,0);
+        ctx.lineTo(0, h);
+        ctx.lineTo(w, h);
+        ctx.lineTo(w, 0);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
         ctx.fill();
+        ctx.restore();
+        ctx.beginPath();
+
+        //ctx.arc(x - offsetx, y - offsety, helpRadius, 0, 2 * Math.PI);
+
+        //let helpHover = false;
+        //if(ballpos){
+          //let a = (x0 + x1 - w)/2 + (ballpos[0] - w/2)/precision;
+          //let b = (y0 + y1 - h)/2 + (ballpos[1] - h/2)/precision;
+          //let dist = Math.sqrt(Math.pow(a + offsetx, 2.0) + Math.pow(b + offsety, 2.0));
+          //helpHover = dist < helpRadius;
+          //console.log(a + offsetx, b + offsety, dist);
+          //ctx.fillStyle = helpHover? highlightColor : drawColor;
+        //}
+        //else {
+          //ctx.fillStyle = drawColor;
+        //}
+        //ctx.fill();
+
+        //ctx.textBaseline = "middle";
+        //ctx.textAlign = "center";
+        //ctx.font = Math.floor(1.5*helpRadius) + "px sans-serif";
+        //ctx.fillStyle = backgroundColor;
+        //ctx.fillText("=", x - offsetx, y - offsety - 0.03 * helpRadius);
 
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
-        ctx.font = Math.floor(1.5*helpRadius) + "px sans-serif";
-        ctx.fillStyle = backgroundColor;
-        ctx.fillText("=", x - offsetx, y - offsety - 0.03 * helpRadius);
+        ctx.font = Math.floor(0.5*buttonSize) + "px sans-serif";
+        for(let i=0; i<buttons.length; ++i){
+          let button = buttons[i];
+          //let [x, y] = ballpos;
+          let a = scrollMargin + buttonMargin + i*(buttonSize + buttonMargin);
+          let b = scrollMargin + buttonMargin;
+          ctx.fillStyle = drawColor;
+          ctx.fillRect(a, b, buttonSize, buttonSize);
+          ctx.fillStyle = backgroundColor;
+          ctx.fillText(buttons[i], a + buttonSize/2, b + buttonSize/2);
+          a = (x0 + x1)/2 + (a - w/2)/precision;
+          b = (y0 + y1)/2 + (b - h/2)/precision;
+          ctx.fillStyle = frameColor;
+          ctx.fillRect(a, b, buttonSize/precision, buttonSize/precision);
+        }
 
         if(ballpos){
           ctx.beginPath();
@@ -203,7 +244,7 @@
           let [x0, y0, x1, y1] = GetZoomWindow();
           let a = (x0 + x1)/2 + (ballpos[0] - w/2)/precision;
           let b = (y0 + y1)/2 + (ballpos[1] - h/2)/precision;
-          if(!helpHover){
+          //if(!helpHover){
             ctx.beginPath();
             ctx.fillStyle = "rgba(255,255,255, 0.3)";
             ctx.arc(a, b, cursorsize*2, 0, 2*Math.PI);
@@ -216,7 +257,7 @@
             ctx.moveTo(a, b-cursorsize);
             ctx.lineTo(a, b+cursorsize);
             ctx.stroke();
-          }
+          //}
         }
       }
       function MouseDown(e){
@@ -264,7 +305,7 @@
         if(ballpos){
           let w = canvas0.width, h = canvas0.height;
           let [x, y] = ballpos;
-          let margin = scrollmargin;
+          let margin = scrollMargin;
           let [x0, y0, x1, y1] = [margin, margin, w-margin, h-margin];
 
           let winx = focusx * w / 100;
@@ -276,6 +317,7 @@
             if(winx < borderx){
               offsetx += winx - borderx;
               winx = borderx;
+              drawlastonly = false;
             }
           }
           if(y < y0){
@@ -283,6 +325,7 @@
             if(winy < bordery){
               offsety += winy - bordery;
               winy = bordery;
+              drawlastonly = false;
             }
           }
           if(x > x1){
@@ -290,6 +333,7 @@
             if(winx > w - borderx){
               offsetx += winx - w + borderx;
               winx = w - borderx;
+              drawlastonly = false;
             }
           }
           if(y > y1){
@@ -297,6 +341,7 @@
             if(winy > h - bordery){
               offsety += winy - h + bordery;
               winy = h - bordery;
+              drawlastonly = false;
             }
           }
           focusx = 100 * winx / w;
