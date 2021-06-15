@@ -2,7 +2,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-      canvas{ position: relative; cursor: none;}
+      canvas{ position: relative; cursor: crosshair;}
       #canvas1{ display: none; }
       #span0{ display: none; }
       body{ margin: 0; overflow: hidden; }
@@ -11,9 +11,9 @@
       window.addEventListener("load", Init);
       let backgroundColor = "#fffcaa", frameColor = "rgba(112,66,20, 0.15)",
           drawColor = "rgb(84,51,18)", highlightColor = "rgb(201,117,34)";
-      let buttonSize = 50;
+      let buttonSize = 72;
       let buttonMargin = 5;
-      let buttons = ["=", "<", ">", "O", "S", "\\", "T"];
+      let buttons = ["=", "<", ">"];
       let focusx = 50, focusy = 50; // out of 100, ie a percent
       let offsetx = 0, offsety = 0;
       let penwidth = 2;
@@ -28,7 +28,7 @@
       let mousedowntime = 0;
       let mousedrag = false;
       let dragradius = 5;
-      let dragdelay = 200; //
+      let recenterdelay = 800; //
       let ballpos = null;
       let ballsize = 45;
       let x = 50, y=50;
@@ -263,9 +263,30 @@
         }
       }
       function MouseDown(e){
-        mousedownpos = [e.offsetX, e.offsetY];
+        let [x, y] = [e.offsetX, e.offsetY];
+        mousedownpos = [x, y];
+        ballpos = mousedownpos.slice(0);
         mousedowntime = Date.now();
         mousedrag = false;
+        setTimeout(((lastdown)=>{
+          let wind = GetZoomWindow();
+          return ()=>{
+            //if(mousedowntime != lastdown){ console.log("another down event happened"); }
+            if(!mousedownpos) return;
+            let dist = Math.sqrt(Math.pow(ballpos[0]-mousedownpos[0], 2) + Math.pow(ballpos[1]-mousedownpos[1], 2));
+            //console.log(dist);
+            if(!mousedrag && mousedowntime == lastdown && dist < dragradius){
+             let [x0,y0,x1,y1] = wind;
+             let dx = (canvas0.width/2 - x)/precision;
+             let dy = (canvas0.height/2 - y)/precision;
+             // console.log((x0+x1)/2, (y0+y1)/2, dx, dy, x, y);
+             offsetx -= dx;
+             offsety -= dy;
+             drawlastonly = false;
+             Draw(drawlastonly);
+            }
+          }
+        })(mousedowntime), recenterdelay)
       }
       function MouseUp(e){
         let x = e.offsetX, y = e.offsetY;
@@ -274,16 +295,10 @@
           ++drawingIndex;
         }
 
-        if(!mousedrag && Date.now() - mousedowntime < dragdelay &&
+        if(!mousedrag && Date.now() - mousedowntime >= recenterdelay &&
            Math.sqrt(Math.pow(x-mousedownpos[0], 2) + Math.pow(y-mousedownpos[1], 2)) < dragradius){
+           //console.log("old recenter");
 
-           let x0 = canvas0.width/2;
-           let y0 = canvas0.height/2;
-           let dx = (x0 - e.offsetX)/precision;
-           let dy = (y0 - e.offsetY)/precision;
-           offsetx -= dx;
-           offsety -= dy;
-           drawlastonly = false;
         }
         
         mousedownpos = null;
@@ -293,11 +308,11 @@
       function MouseMove(e){
         let x = e.offsetX, y = e.offsetY;
         let w = canvas0.width, h = canvas0.height;
-        ballpos = [x, y];
         let [x0, y0] = GetZoomWindow();
         let targetx = x0 + x/precision;
         let targety = y0 + y/precision;
         if(mousedownpos){
+          ballpos = [x, y];
           drawing.push(targetx + offsetx, targety + offsety);
           drawingIndex += 2;
           mousedrag = true;
