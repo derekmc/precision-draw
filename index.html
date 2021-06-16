@@ -14,6 +14,7 @@
       let buttonSize = 72;
       let buttonMargin = 5;
       let buttons = ["=", "<", ">"];
+      let buttonbreak = buttons.length > 5? Math.ceil(buttons.length/2) : buttons.length;
       let focusx = 50, focusy = 50; // out of 100, ie a percent
       let offsetx = 0, offsety = 0;
       let penwidth = 2;
@@ -68,10 +69,6 @@
         let x1 = x0 + w/precision;
         let y1 = y0 + h/precision;
         return [x0, y0, x1, y1];
-      }
-      function DrawLast(){
-      }
-      function ButtonClick(button){
       }
 
       function Draw(lastonly){
@@ -220,12 +217,11 @@
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         ctx.font = Math.floor(0.5*buttonSize) + "px sans-serif";
-        let linebreak = buttons.length > 5? Math.ceil(buttons.length/2) : buttons.length;
         for(let i=0; i<buttons.length; ++i){
           let button = buttons[i];
           //let [x, y] = ballpos;
-          let a = scrollMargin + buttonMargin + (i - (i>=linebreak? linebreak: 0)) *(buttonSize + buttonMargin);
-          let b = scrollMargin + buttonMargin + (i>=linebreak? buttonSize + buttonMargin : 0);
+          let a = scrollMargin + buttonMargin + (i - (i>=buttonbreak? buttonbreak: 0)) *(buttonSize + buttonMargin);
+          let b = scrollMargin + buttonMargin + (i>=buttonbreak? buttonSize + buttonMargin : 0);
           ctx.fillStyle = drawColor;
           ctx.fillRect(a, b, buttonSize, buttonSize);
           ctx.fillStyle = backgroundColor;
@@ -262,12 +258,41 @@
           //}
         }
       }
+      function ButtonClick(buttonText){
+        console.log("clicked: " + buttonText);
+        if(buttonText == "<"){
+          //undo
+          let i = Math.min(drawing.length, drawingIndex) - 1;
+          do{ --i; console.log('--i'); } while(i > 0 && typeof drawing[i] == "number");
+          //console.log("typeof drawing[i]", typeof drawing[i], i);
+          //console.log(drawing);
+          drawingIndex = i + 1;
+          drawlastonly = false;
+        }
+        if(buttonText == ">"){
+          let i = Math.min(drawing.length, drawingIndex);
+          while(i < drawing.length - 1 && typeof drawing[i] == "number"){ ++i; }
+          //console.log("typeof drawing[i]", typeof drawing[i], i);
+          //console.log(drawing);
+          drawingIndex = i;
+          drawlastonly = false;
+        }
+        if(buttonText == "="){
+        }
+      }
       function MouseDown(e){
         let [x, y] = [e.offsetX, e.offsetY];
         mousedownpos = [x, y];
         ballpos = mousedownpos.slice(0);
         mousedowntime = Date.now();
         mousedrag = false;
+        for(let i=0; i<buttons.length; ++i){
+          let a = scrollMargin + buttonMargin + (i - (i>=buttonbreak? buttonbreak: 0)) *(buttonSize + buttonMargin);
+          let b = scrollMargin + buttonMargin + (i>=buttonbreak? buttonSize + buttonMargin : 0);
+          if(x >= a && x <= a + buttonSize && y >= b && y <= b + buttonSize){
+            ButtonClick(buttons[i]);
+          }
+        }
         setTimeout(((lastdown)=>{
           let wind = GetZoomWindow();
           return ()=>{
@@ -290,8 +315,8 @@
       }
       function MouseUp(e){
         let x = e.offsetX, y = e.offsetY;
-        if(drawing.length > 0 && drawing[drawing.length - 1] != null){
-          drawing.push(null);
+        if(drawing.length > 0 && drawing[drawingIndex - 1] != null){
+          drawing[drawingIndex] = null;
           ++drawingIndex;
         }
 
@@ -313,8 +338,8 @@
         let targety = y0 + y/precision;
         if(mousedownpos){
           ballpos = [x, y];
-          drawing.push(targetx + offsetx, targety + offsety);
-          drawingIndex += 2;
+          drawing[drawingIndex++] = targetx + offsetx;
+          drawing[drawingIndex++] = targety + offsety;
           mousedrag = true;
         }
       }
