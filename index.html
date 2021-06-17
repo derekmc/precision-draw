@@ -29,13 +29,14 @@
       let mousedowntime = 0;
       let mousedrag = false;
       let dragradius = 5;
-      let recenterdelay = 800; //
+      let recenterdelay = 1000; //
       let ballpos = null;
       let ballsize = 45;
       let x = 50, y=50;
       let delay = 100;
       let drawingIndex = drawing.length;
       let drawlastonly = true;
+      let hidecrosshair = false;
 
       const DRAW='draw', TEXT='text', LINE='line';
 
@@ -239,10 +240,10 @@
           ctx.arc(ballpos[0], ballpos[1], ballsize/2, 0, 2*Math.PI);
           ctx.fill();
           ctx.stroke();
-          let [x0, y0, x1, y1] = GetZoomWindow();
-          let a = (x0 + x1)/2 + (ballpos[0] - w/2)/precision;
-          let b = (y0 + y1)/2 + (ballpos[1] - h/2)/precision;
-          //if(!helpHover){
+          if(!hidecrosshair){
+            let [x0, y0, x1, y1] = GetZoomWindow();
+            let a = (x0 + x1)/2 + (ballpos[0] - w/2)/precision;
+            let b = (y0 + y1)/2 + (ballpos[1] - h/2)/precision;
             ctx.beginPath();
             ctx.fillStyle = "rgba(255,255,255, 0.3)";
             ctx.arc(a, b, cursorsize*2, 0, 2*Math.PI);
@@ -255,7 +256,7 @@
             ctx.moveTo(a, b-cursorsize);
             ctx.lineTo(a, b+cursorsize);
             ctx.stroke();
-          //}
+          }
         }
       }
       function ButtonClick(buttonText){
@@ -263,17 +264,13 @@
         if(buttonText == "<"){
           //undo
           let i = Math.min(drawing.length, drawingIndex) - 1;
-          do{ --i; console.log('--i'); } while(i > 0 && typeof drawing[i] == "number");
-          //console.log("typeof drawing[i]", typeof drawing[i], i);
-          //console.log(drawing);
+          do{ --i; } while(i > 0 && typeof drawing[i] == "number");
           drawingIndex = i + 1;
           drawlastonly = false;
         }
         if(buttonText == ">"){
           let i = Math.min(drawing.length, drawingIndex);
           while(i < drawing.length - 1 && typeof drawing[i] == "number"){ ++i; }
-          //console.log("typeof drawing[i]", typeof drawing[i], i);
-          //console.log(drawing);
           drawingIndex = i;
           drawlastonly = false;
         }
@@ -293,10 +290,27 @@
             ButtonClick(buttons[i]);
           }
         }
+        //setTimeout(((lastdown)=>{
+        //  return ()=>{
+        //    if(!mousedownpos) return;
+        //    if(mousedowntime != lastdown){
+        //      //console.log("another down event happened");
+        //      return;
+        //    }
+        //    let dist = Math.sqrt(Math.pow(ballpos[0]-mousedownpos[0], 2) + Math.pow(ballpos[1]-mousedownpos[1], 2));
+        //    if(mousedrag || mousedowntime != lastdown || dist >= dragradius){
+        //      return; }
+        //    hidecrosshair = true;
+        //    Draw(false);
+        //  }
+        //})(mousedowntime), recenterdelay/2);
         setTimeout(((lastdown)=>{
           let wind = GetZoomWindow();
           return ()=>{
-            //if(mousedowntime != lastdown){ console.log("another down event happened"); }
+            if(mousedowntime != lastdown){
+              //console.log("another down event happened");
+              return;
+            }
             if(!mousedownpos) return;
             let dist = Math.sqrt(Math.pow(ballpos[0]-mousedownpos[0], 2) + Math.pow(ballpos[1]-mousedownpos[1], 2));
             //console.log(dist);
@@ -308,6 +322,7 @@
              offsetx -= dx;
              offsety -= dy;
              drawlastonly = false;
+             hidecrosshair = false;
              Draw(drawlastonly);
             }
           }
