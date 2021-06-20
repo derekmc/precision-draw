@@ -310,37 +310,73 @@
         if(buttonText == "="){
         }
         if(buttonText == "Left &gt;"){
+          textinput.style.textAlign = "center";
           button.innerHTML = "Center &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
               ButtonClick(text, button); }})(button.innerHTML, button);
         }
         if(buttonText == "Center &gt;"){
+          textinput.style.textAlign = "right";
           button.innerHTML = "Right &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
               ButtonClick(text, button); }})(button.innerHTML, button);
         }
         if(buttonText == "Right &gt;"){
+          textinput.style.textAlign = "left";
           button.innerHTML = "Left &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
               ButtonClick(text, button); }})(button.innerHTML, button);
         }
         if(buttonText == "Serif &gt;"){
+          textinput.style.fontFamily = "sans-serif";
           button.innerHTML = "Sans Serif &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
               ButtonClick(text, button); }})(button.innerHTML, button);
         }
         if(buttonText == "Sans Serif &gt;"){
+          textinput.style.fontFamily = "monospace";
           button.innerHTML = "Monospace &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
               ButtonClick(text, button); }})(button.innerHTML, button);
         }
         if(buttonText == "Monospace &gt;"){
+          textinput.style.fontFamily = "serif";
           button.innerHTML = "Serif &gt;";
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+        if(buttonText == "Normal &gt;"){
+          textinput.style.fontWeight = "bold";
+          button.innerHTML = "Bold &gt;";
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+        if(buttonText == "Bold &gt;"){
+          textinput.style.fontWeight = "normal";
+          textinput.style.fontStyle = "italic";
+          button.innerHTML = "Italic &gt;";
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+        if(buttonText == "Italic &gt;"){
+          textinput.style.fontWeight = "bold";
+          button.innerHTML = "Bold Italic &gt;";
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+        if(buttonText == "Bold Italic &gt;"){
+          textinput.style.fontWeight = "normal";
+          textinput.style.fontStyle = "normal";
+          button.innerHTML = "Normal &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
               ButtonClick(text, button); }})(button.innerHTML, button);
@@ -510,6 +546,7 @@
       <textarea id="textinput"></textarea>
       <button> Sans Serif &gt; </button>
       <button> Center &gt; </button>
+      <button> Normal &gt; </button>
       <br>
       <button> Done </button>
     </div>
