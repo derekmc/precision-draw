@@ -2,7 +2,7 @@
 Easy
 ==============
  - buttons in bottom left and right.
- - variable for "emulate mobile", which waits for mousedown/touchdown to show cursor.
+ - bug where last drawn line is thicker.
 
 Medium
 ==============
@@ -17,6 +17,7 @@ Hard
 
 Done
 ==============
+ - variable for "emulate mobile", which waits for mousedown/touchdown to show cursor.
 
 
 

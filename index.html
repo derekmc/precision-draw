@@ -9,8 +9,10 @@
     </style>
     <script>
       window.addEventListener("load", Init);
-      let backgroundColor = "#fffcaa", frameColor = "rgba(112,66,20, 0.15)",
-          drawColor = "rgb(84,51,18)", highlightColor = "rgb(201,117,34)";
+      //let backgroundColor = "#fffcaa", frameColor = "rgba(112,66,20, 0.15)",
+      //    drawColor = "rgb(84,51,18)", highlightColor = "rgb(201,117,34)";
+      let backgroundColor = "#fff", frameColor = "rgba(80,80,80, 0.15)",
+          drawColor = "rgb(51,51,51)", highlightColor = "rgb(200,200,200)";
       let buttonSize = 72;
       let buttonMargin = 5;
       let buttons = ["=", "<", ">"];
@@ -37,6 +39,7 @@
       let drawingIndex = drawing.length;
       let drawlastonly = true;
       let hidecrosshair = false;
+      let emulatemobiletouch = false; // emulates mobile style 'touch', so no cursor movements when mouse is not down.
 
       const DRAW='draw', TEXT='text', LINE='line';
 
@@ -47,6 +50,7 @@
         Status("Init");
         x = canvas0.width/2;
         y = canvas0.height/2;
+        if(!emulatemobiletouch) canvas0.style.cursor = "none";
         setInterval(Animate, delay);
         canvas0.addEventListener("mousemove", MouseMove);
         canvas0.addEventListener("mousedown", MouseDown);
@@ -236,7 +240,7 @@
         if(ballpos){
           ctx.beginPath();
           ctx.strokeStyle = "rgba(0,0,0,0.4)";
-          ctx.fillStyle = "rgba(255,255,255,0.4)";
+          ctx.fillStyle = "rgba(200,200,200,0.2)";
           ctx.arc(ballpos[0], ballpos[1], ballsize/2, 0, 2*Math.PI);
           ctx.fill();
           ctx.stroke();
@@ -245,7 +249,7 @@
             let a = (x0 + x1)/2 + (ballpos[0] - w/2)/precision;
             let b = (y0 + y1)/2 + (ballpos[1] - h/2)/precision;
             ctx.beginPath();
-            ctx.fillStyle = "rgba(255,255,255, 0.3)";
+            ctx.fillStyle = "rgba(200,200,200, 0.2)";
             ctx.arc(a, b, cursorsize*2, 0, 2*Math.PI);
             ctx.fill();
             ctx.beginPath();
@@ -283,6 +287,7 @@
         ballpos = mousedownpos.slice(0);
         mousedowntime = Date.now();
         mousedrag = false;
+        if(emulatemobiletouch) canvas0.style.cursor = "none";
         for(let i=0; i<buttons.length; ++i){
           let a = scrollMargin + buttonMargin + (i - (i>=buttonbreak? buttonbreak: 0)) *(buttonSize + buttonMargin);
           let b = scrollMargin + buttonMargin + (i>=buttonbreak? buttonSize + buttonMargin : 0);
@@ -329,6 +334,7 @@
         })(mousedowntime), recenterdelay)
       }
       function MouseUp(e){
+        if(emulatemobiletouch) canvas0.style.cursor = "crosshair";
         let x = e.offsetX, y = e.offsetY;
         if(drawing.length > 0 && drawing[drawingIndex - 1] != null){
           drawing[drawingIndex] = null;
@@ -351,6 +357,9 @@
         let [x0, y0] = GetZoomWindow();
         let targetx = x0 + x/precision;
         let targety = y0 + y/precision;
+        if(!emulatemobiletouch){
+          ballpos = [x, y];
+        }
         if(mousedownpos){
           ballpos = [x, y];
           drawing[drawingIndex++] = targetx + offsetx;
