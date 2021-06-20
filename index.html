@@ -67,8 +67,10 @@
       let drawlastonly = true;
       let hidecrosshair = false;
       let emulatemobiletouch = false; // emulates mobile style 'touch', so no cursor movements when mouse is not down.
-
       const DRAW='draw', TEXT='text', LINE='line';
+      let tool = DRAW;
+      let textinfo = {text: "Sample Text", fontWeight: "normal", fontStyle: "normal", fontFamily: "sans-serif", textAlign: "center"};
+
 
       function Status(x){
         span0.innerHTML = "" + x;
@@ -311,6 +313,7 @@
         }
         if(buttonText == "Left &gt;"){
           textinput.style.textAlign = "center";
+          textinfo.textAlign = "center";
           button.innerHTML = "Center &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
@@ -318,6 +321,7 @@
         }
         if(buttonText == "Center &gt;"){
           textinput.style.textAlign = "right";
+          textinfo.textAlign = "right";
           button.innerHTML = "Right &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
@@ -325,6 +329,7 @@
         }
         if(buttonText == "Right &gt;"){
           textinput.style.textAlign = "left";
+          textinfo.textAlign = "left";
           button.innerHTML = "Left &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
@@ -353,6 +358,7 @@
         }
         if(buttonText == "Normal &gt;"){
           textinput.style.fontWeight = "bold";
+          textinfo.fontWeight = "bold";
           button.innerHTML = "Bold &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
@@ -361,6 +367,8 @@
         if(buttonText == "Bold &gt;"){
           textinput.style.fontWeight = "normal";
           textinput.style.fontStyle = "italic";
+          textinfo.fontWeight = "normal";
+          textinfo.fontStyle = "italic";
           button.innerHTML = "Italic &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
@@ -368,6 +376,7 @@
         }
         if(buttonText == "Italic &gt;"){
           textinput.style.fontWeight = "bold";
+          textinfo.fontWeight = "bold";
           button.innerHTML = "Bold Italic &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
@@ -376,10 +385,17 @@
         if(buttonText == "Bold Italic &gt;"){
           textinput.style.fontWeight = "normal";
           textinput.style.fontStyle = "normal";
+          textinfo.fontWeight = "normal";
+          textinfo.fontStyle = "normal";
           button.innerHTML = "Normal &gt;";
           button.onclick = ((text, button)=>{
             return ()=>{
               ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+        if(buttonText == "Add Text"){
+          textpopup.style.display = "none";
+          textinfo.text = textinput.value;
+          tool = TEXT;
         }
       }
       function RegisterButtonEvents(){
@@ -548,7 +564,7 @@
       <button> Center &gt; </button>
       <button> Normal &gt; </button>
       <br>
-      <button> Done </button>
+      <button> Add Text </button>
     </div>
   </body>
 </html>
