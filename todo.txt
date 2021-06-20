@@ -1,0 +1,22 @@
+
+Easy
+==============
+ - buttons in bottom left and right.
+ - variable for "emulate mobile", which waits for mousedown/touchdown to show cursor.
+
+Medium
+==============
+ - on screen zoom, pensize, undo select
+
+
+Hard
+==============
+ - Generated "config" page
+ - 
+
+
+Done
+==============
+
+
+
