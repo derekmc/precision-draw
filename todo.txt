@@ -12,7 +12,7 @@ Medium
 Hard
 ==============
  - Generated "config" page
- - 
+ - Text
 
 
 Done

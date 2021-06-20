@@ -6,6 +6,33 @@
       #canvas1{ display: none; }
       #span0{ display: none; }
       body{ margin: 0; overflow: hidden; }
+      #textpopup {
+        display: inline-block;
+        position: fixed; top: 0px; bottom: 0px; left: 0px; right: 0px;
+        background: rgba(255,255,255, 0.85);
+        text-align: center;
+        font-family: sans-serif;
+      }
+      #textinput{
+        border: 3px solid blue;
+        background: rgba(255,255,255,0.6);
+        width: calc(100% - 60px);
+        backdrop-filter: blur(3px);
+        height: calc(100% - 205px);
+        font-size: 30px;
+        padding: 10px;
+        font-family: sans-serif;
+        text-align: center;
+      }
+      button{
+        background: #000;
+        color: #fff;
+        font-size: 22px;
+        border-radius: 5px;
+        padding: 8px 15px;
+        margin: 3px;
+        border: none;
+      }
     </style>
     <script>
       window.addEventListener("load", Init);
@@ -58,12 +85,13 @@
         canvas0.addEventListener("mouseout", ()=>{ ballpos = null; mousedownpos = null; });
         window.addEventListener("resize", Resize);
         Resize();
+        RegisterButtonEvents();
       }
       function Resize(){
-        canvas0.width = window.innerWidth-2;
-        canvas0.height = window.innerHeight-2;
-        canvas1.width = window.innerWidth-2;
-        canvas1.height = window.innerHeight-2;
+        canvas0.width = window.innerWidth-0;
+        canvas0.height = window.innerHeight-0;
+        canvas1.width = window.innerWidth-0;
+        canvas1.height = window.innerHeight-0;
         Draw();
       }
       function GetZoomWindow(){
@@ -263,7 +291,8 @@
           }
         }
       }
-      function ButtonClick(buttonText){
+      function ButtonClick(buttonText, button){
+        buttonText = buttonText.trim();
         console.log("clicked: " + buttonText);
         if(buttonText == "<"){
           //undo
@@ -279,6 +308,51 @@
           drawlastonly = false;
         }
         if(buttonText == "="){
+        }
+        if(buttonText == "Left &gt;"){
+          button.innerHTML = "Center &gt;";
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+        if(buttonText == "Center &gt;"){
+          button.innerHTML = "Right &gt;";
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+        if(buttonText == "Right &gt;"){
+          button.innerHTML = "Left &gt;";
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+        if(buttonText == "Serif &gt;"){
+          button.innerHTML = "Sans Serif &gt;";
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+        if(buttonText == "Sans Serif &gt;"){
+          button.innerHTML = "Monospace &gt;";
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+        if(buttonText == "Monospace &gt;"){
+          button.innerHTML = "Serif &gt;";
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
+        }
+      }
+      function RegisterButtonEvents(){
+        let buttons = document.getElementsByTagName("button");
+        for(let i=0; i<buttons.length; ++i){
+          let button = buttons[i];
+          button.onclick = ((text, button)=>{
+            return ()=>{
+              ButtonClick(text, button); }})(button.innerHTML, button);
         }
       }
       function MouseDown(e){
@@ -431,5 +505,13 @@
     <span id="span0"></span>
     <canvas id="canvas0"></canvas>
     <canvas id="canvas1"></canvas>
+    <div id="textpopup">
+      <h2> Enter Text </h2>
+      <textarea id="textinput"></textarea>
+      <button> Sans Serif &gt; </button>
+      <button> Center &gt; </button>
+      <br>
+      <button> Done </button>
+    </div>
   </body>
 </html>
