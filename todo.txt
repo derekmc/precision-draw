@@ -12,12 +12,16 @@ Medium
 Hard
 ==============
  - Generated "config" page
- - Text
+ - Text (use ctx.measureText to fit text within a rectangle, wrap lines, then scale lines).
 
 
 Done
 ==============
  - variable for "emulate mobile", which waits for mousedown/touchdown to show cursor.
 
+
+Notes
+==============
+ - Polymorphic datastructures. Example "drawing" array, has both strokes, lines, text, etc.
 
 
